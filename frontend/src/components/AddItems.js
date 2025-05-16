@@ -1,20 +1,25 @@
 import React, {useEffect, useState} from "react";
 import cong from "../Firebase";
 import {collection, addDoc} from "firebase/firestore";
+import {ToastContainer, toast} from "react-toastify"
 
 /**
  * TODO :
  *  Beautify page
- *  Add proper html ids and classnames and stuff
- *  Validate form (frontend)
- *  Notify user that item has been successfully addded or if something goes wrong
- *  Clear form
+ *  Add proper html ids and classnames and stuff, and structure the code properly
+ *  handle same item being added more than once
  */
 
 export default function AddItem(){
+    // variables
     const [itemName, setItemName] = useState("");
-    const [itemPrice, setItemPrice] = useState();
+    const [itemPrice, setItemPrice] = useState("");
 
+    // toasts
+    const notifyAddItem = () => toast.success("Item added");
+    const notifyAddItemFail = () => toast.error("Item not added")
+
+    // functions
     async function saveItem(){
         // validate fields
 
@@ -25,8 +30,10 @@ export default function AddItem(){
                 itemPrice : itemPrice
             });
             console.log("Document written with ID : ", docRef.id);
+            notifyAddItem();
         } catch (e) {
             console.error("Error adding item : ", e);
+            notifyAddItemFail();
         }
     }
 
@@ -37,29 +44,39 @@ export default function AddItem(){
 
     return(
         <div>
+            <ToastContainer position = "top-center" autoClose = {1000} pauseOnHover = {false} hideProgressBar = {true}/>
             <h1>Add item form</h1>
             <div>
-                <form>
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    saveItem();
+                    clearFields();
+                }}>
                     <div>
                         <label>Item Name</label>
-                        <input type="text" value={itemName} onChange={(e) => {
-                            setItemName(e.target.value);
+                        <input required type="text" value={itemName} placeholder="Enter name" pattern="[A-Za-z ]+" onChange={(e) => {
+                            // replace anything that is not an uppercase, lowercase or space with nothing
+                            let value = e.target.value.replace(/[^A-Za-z ]/g, '');
+                            // replace one or more white spaces with single space
+                            value = value.replace(/\s+/g, ' ');
+                            // remove leading space if at beginning
+                            if (value.startsWith(' ')) {
+                                value = value.substring(1);
+                            }
+                            setItemName(value);
                         }}/>
                     </div>
                     <div>
                         <label>Item Price</label>
-                        <input type="number" value={itemPrice} onChange={(e) => {
+                        <input required type="number" value={itemPrice} min={0} placeholder="Enter Price " onChange={(e) => {
                             setItemPrice(e.target.value);
                         }}/>
                     </div>
+                    <button type="submit">Add item</button>
                 </form>
             </div>
-            <div>
-                <button onClick={() => {
-                saveItem();
-                clearFields();
-            }}>Add item</button>
             <a href="/"><button>Home</button></a>
+            <div>
             </div>
         </div>
     );

@@ -1,11 +1,11 @@
 import {useEffect, useState} from "react";
-import {collection, getDocs, doc, updateDoc} from "firebase/firestore";
+import {collection, getDocs, doc, updateDoc, deleteDoc} from "firebase/firestore";
 import cong from "../Firebase";
-import { toast, ToastContainer } from "react-toastify";
+import { toast, ToastContainer} from "react-toastify";
 
 /**
  * TODO :
- * Day 1 
+ * Day 1
  *  Beautify the page
  *  Add proper html ids and classnames and stuff, and structure the code properly
  *  Handle errors
@@ -13,8 +13,10 @@ import { toast, ToastContainer } from "react-toastify";
  *  What happens if alot of items are added? Handle this
  * Day 2
  *  Can the edit modal be defined as a seperate file?
- *  can the validation logic not be duplicated?
- *  order of the items being displayed changes, last added is not at the bottom
+ *  Can the validation logic not be duplicated?
+ *  Order of the items being displayed changes, last added is not at the bottom.
+ *  Handle no items being there
+ *  make sure add button position doesn't change based on the list length (use pagination or something within a small box)
  */
 
 export default function ViewItems(){
@@ -25,6 +27,7 @@ export default function ViewItems(){
     const [editItemPrice, setEditItemPrice] = useState("");
 
     const notifyEditItemFail = () => toast.error("Item not edited");
+    const notifyDeleteItemFail = () => toast.error("Item not deleted");
     
     useEffect(() => {
         // firestore database approach
@@ -35,11 +38,12 @@ export default function ViewItems(){
                 id: doc.id,
                 ...doc.data()
             }));
+
             setItems(itemsArray);
             console.log(itemsArray);
             console.log(items);
         }
-        
+
         fetchData();
     }, []);
 
@@ -78,6 +82,38 @@ export default function ViewItems(){
         console.log("edit model set to true");
     }
 
+    const handleDeleteClick = async (item) => {
+        toast.info(
+            <div>
+                <p>Are you sure you want to delete "{item.itemName}"?</p>
+                <div>
+                    <button onClick={async () => {
+                        // delete item
+                        try {
+                            await deleteDoc(doc(cong, "items", item.id));
+                            setItems(items.filter(i => i.id !== item.id));
+                        } catch (error) {
+                            console.error("Item not deleted : ", error);
+                            notifyDeleteItemFail();
+                        }
+
+                        toast.dismiss();
+                        toast.success('Item deleted');
+                    }}>Confirm</button>
+                    <button onClick={() => {
+                        toast.dismiss()
+                    }}>Cancel</button>
+                </div>
+            </div>,
+            {
+                autoClose : false,
+                closeOnClick : false,
+                draggable : false,
+                closeButton: false
+            }
+        )
+    }
+
     return(
         <div>
             <ToastContainer position = "top-center" autoClose = {1000} pauseOnHover = {false} hideProgressBar = {true}/>
@@ -95,7 +131,7 @@ export default function ViewItems(){
                             <td>{item.itemName}</td>
                             <td>{item.itemPrice}</td>
                             <td><button onClick={() => handleEditClick(item)}>Edit</button></td>
-                            <td><button>Delete</button></td>
+                            <td><button onClick={() => handleDeleteClick(item)}>Delete</button></td>
                         </tr>
                     ))}
                 </tbody>

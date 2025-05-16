@@ -1,7 +1,7 @@
-import {useEffect, useState} from "react";
-import {collection, getDocs, doc, updateDoc, deleteDoc} from "firebase/firestore";
+import { useEffect, useState } from "react";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import cong from "../Firebase";
-import { toast, ToastContainer} from "react-toastify";
+import { toast, ToastContainer } from "react-toastify";
 
 /**
  * TODO :
@@ -19,19 +19,20 @@ import { toast, ToastContainer} from "react-toastify";
  *  make sure add button position doesn't change based on the list length (use pagination or something within a small box)
  */
 
-export default function ViewItems(){
+export default function ViewItems() {
     const [items, setItems] = useState([]);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const [editItemName, setEditItemName] = useState("");
     const [editItemPrice, setEditItemPrice] = useState("");
+    const [blockingAction, setBlockingAction] = useState(false);
 
     const notifyEditItemFail = () => toast.error("Item not edited");
     const notifyDeleteItemFail = () => toast.error("Item not deleted");
-    
+
     useEffect(() => {
         // firestore database approach
-        async function fetchData(){
+        async function fetchData() {
             const querySnapshot = await getDocs(collection(cong, "items"));
 
             const itemsArray = querySnapshot.docs.map(doc => ({
@@ -56,13 +57,13 @@ export default function ViewItems(){
 
             const docRef = doc(cong, "items", editItem.id);
             await updateDoc(docRef, {
-                itemName : trimmedName,
-                itemPrice : editItemPrice
+                itemName: trimmedName,
+                itemPrice: editItemPrice
             });
 
             // Update the local state to reflect changes
-            const updatedItems = items.map(item => 
-                item.id === editItem.id 
+            const updatedItems = items.map(item =>
+                item.id === editItem.id
                     ? { ...item, itemName: trimmedName, itemPrice: editItemPrice }
                     : item
             );
@@ -83,11 +84,15 @@ export default function ViewItems(){
     }
 
     const handleDeleteClick = async (item) => {
+        setBlockingAction(true);
         toast.info(
             <div>
                 <p>Are you sure you want to delete "{item.itemName}"?</p>
                 <div>
                     <button onClick={async () => {
+                        toast.dismiss();
+                        setBlockingAction(false);
+
                         // delete item
                         try {
                             await deleteDoc(doc(cong, "items", item.id));
@@ -96,75 +101,90 @@ export default function ViewItems(){
                             console.error("Item not deleted : ", error);
                             notifyDeleteItemFail();
                         }
-
-                        toast.dismiss();
                         toast.success('Item deleted');
                     }}>Confirm</button>
                     <button onClick={() => {
-                        toast.dismiss()
+                        toast.dismiss();
+                        setBlockingAction(false);
                     }}>Cancel</button>
                 </div>
             </div>,
             {
-                autoClose : false,
-                closeOnClick : false,
-                draggable : false,
+                autoClose: false,
+                closeOnClick: false,
+                draggable: false,
                 closeButton: false
             }
         )
     }
 
-    return(
-        <div>
-            <ToastContainer position = "top-center" autoClose = {1000} pauseOnHover = {false} hideProgressBar = {true}/>
-            <h1>Items : {items.length} </h1>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Item Name</th>
-                        <th>Price (Rs.)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {items.map((item, index) => (
-                        <tr key={index}>
-                            <td>{item.itemName}</td>
-                            <td>{item.itemPrice}</td>
-                            <td><button onClick={() => handleEditClick(item)}>Edit</button></td>
-                            <td><button onClick={() => handleDeleteClick(item)}>Delete</button></td>
+    return (
+        <>
+            {blockingAction && (
+                <div style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: "rgba(0,0,0,0.3)",
+                    zIndex: 1000,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center"
+                }}>
+                </div>
+            )}
+            <div>
+                <ToastContainer position="top-center" autoClose={1000} pauseOnHover={false} hideProgressBar={true} />
+                <h1>Items : {items.length} </h1>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Price (Rs.)</th>
                         </tr>
-                    ))}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {items.map((item, index) => (
+                            <tr key={index}>
+                                <td>{item.itemName}</td>
+                                <td>{item.itemPrice}</td>
+                                <td><button onClick={() => handleEditClick(item)}>Edit</button></td>
+                                <td><button onClick={() => handleDeleteClick(item)}>Delete</button></td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
 
-            <a href="/add-item"><button>Add new item</button></a>
+                <a href="/add-item"><button>Add new item</button></a>
 
-            {/* Edit modal */}
-            {showEditModal && (
-                <div>
+                {/* Edit modal */}
+                {showEditModal && (
                     <div>
-                        <h2>Edit Item</h2>
-                        <form onSubmit={handleEditSubmit}>
-                            <div>
-                                <label>Item Name</label>
-                                <input 
-                                    required 
-                                    type="string" 
-                                    value={editItemName} 
-                                    onChange={(e) => {
-                                        // replace anything that is not an uppercase, lowercase or space with nothing
-                                        let value = e.target.value.replace(/[^A-Za-z ]/g, '');
-                                        // remove one or more white spaces with a single space
-                                        value = value.replace(/\s+/g, ' ');
-                                        setEditItemName(value);
-                                    }}
-                                />
-                            </div>
+                        <div>
+                            <h2>Edit Item</h2>
+                            <form onSubmit={handleEditSubmit}>
+                                <div>
+                                    <label>Item Name</label>
+                                    <input
+                                        required
+                                        type="string"
+                                        value={editItemName}
+                                        onChange={(e) => {
+                                            // replace anything that is not an uppercase, lowercase or space with nothing
+                                            let value = e.target.value.replace(/[^A-Za-z ]/g, '');
+                                            // remove one or more white spaces with a single space
+                                            value = value.replace(/\s+/g, ' ');
+                                            setEditItemName(value);
+                                        }}
+                                    />
+                                </div>
                                 <div>
                                     <label>Item Price(Rs.)</label>
-                                    <input 
+                                    <input
                                         required
-                                        type="number" 
+                                        type="number"
                                         value={editItemPrice}
                                         min={0}
                                         onChange={(e) => {
@@ -176,10 +196,11 @@ export default function ViewItems(){
                                     <button onClick={() => setShowEditModal(false)}>Cancel</button>
                                     <button type="submit">Save changes</button>
                                 </div>
-                        </form>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )}
+            </div>
+        </>
     );
 }

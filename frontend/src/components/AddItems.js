@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import cong from "../Firebase";
 import {collection, addDoc} from "firebase/firestore";
 import {ToastContainer, toast} from "react-toastify"
+import { validateItemName } from "../utils/ValidateItemName";
 
 /**
  * TODO :
@@ -55,10 +56,7 @@ export default function AddItem(){
                     <div>
                         <label>Item Name</label>
                         <input required type="text" value={itemName} placeholder="Enter name" pattern="[A-Za-z ]+" onChange={(e) => {
-                            // replace anything that is not an uppercase, lowercase or space with nothing
-                            let value = e.target.value.replace(/[^A-Za-z ]/g, '');
-                            // replace one or more white spaces with single space
-                            value = value.replace(/\s+/g, ' ');
+                            let value = validateItemName(e.target.value);
                             // remove leading space if at beginning
                             if (value.startsWith(' ')) {
                                 value = value.substring(1);

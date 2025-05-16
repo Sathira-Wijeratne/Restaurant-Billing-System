@@ -2,21 +2,23 @@ import { useEffect, useState } from "react";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import cong from "../Firebase";
 import { toast, ToastContainer } from "react-toastify";
+import { validateItemName } from "../utils/ValidateItemName";
 
 /**
  * TODO :
- * Day 1
- *  Beautify the page
- *  Add proper html ids and classnames and stuff, and structure the code properly
- *  Handle errors
- *  Do something about the loading time or display something till data loads or prevent data being fetched everytime
- *  What happens if alot of items are added? Handle this
- * Day 2
- *  Can the edit modal be defined as a seperate file?
- *  Can the validation logic not be duplicated?
- *  Order of the items being displayed changes, last added is not at the bottom.
- *  Handle no items being there
- *  make sure add button position doesn't change based on the list length (use pagination or something within a small box)
+ *  Day 1:
+ *      Beautify the page
+ *      Add proper html ids and classnames and stuff, and structure the code properly
+ *      Handle errors
+ *      Do something about the loading time or display something till data loads or prevent data being fetched everytime
+ *      What happens if alot of items are added? Handle this
+ *  Day 2:
+ *      Can the edit modal be defined as a seperate file?
+ *      Make sure most recent item is added to the top
+ *      Handle when no items being there
+ *      Make sure add button position doesn't change based on the list length (use pagination or something within a small box)
+ *      Make the Edit form come in proper place
+ *      Beautify dialog box, seperate buttons
  */
 
 export default function ViewItems() {
@@ -173,10 +175,12 @@ export default function ViewItems() {
                                         value={editItemName}
                                         onChange={(e) => {
                                             // replace anything that is not an uppercase, lowercase or space with nothing
-                                            let value = e.target.value.replace(/[^A-Za-z ]/g, '');
-                                            // remove one or more white spaces with a single space
-                                            value = value.replace(/\s+/g, ' ');
-                                            setEditItemName(value);
+                                            // let value = e.target.value.replace(/[^A-Za-z ]/g, '');
+                                            // // remove one or more white spaces with a single space
+                                            // value = value.replace(/\s+/g, ' ');
+
+                                            
+                                            setEditItemName(validateItemName(e.target.value));
                                         }}
                                     />
                                 </div>

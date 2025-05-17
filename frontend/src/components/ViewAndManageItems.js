@@ -3,7 +3,6 @@ import { toast, ToastContainer } from "react-toastify";
 import { Add, MenuBook } from "@mui/icons-material";
 import { Paper, Button, Typography, Box, Container, ThemeProvider, CircularProgress } from "@mui/material";
 import restaurantTheme from "../theme/restaurantTheme";
-import RestaurantHeader from "./RestaurantHeader";
 import AddItemDialog from "./dialogs/AddItemDialog";
 import EditItemDialog from "./dialogs/EditItemDialog";
 import MenuItemsTable from "./MenuItemsTable";
@@ -116,8 +115,7 @@ export default function ViewAndManageItems() {
     };
 
     return (
-        <ThemeProvider theme={restaurantTheme}>            {/* Restaurant Header Component */}
-            {/* <RestaurantHeader /> */}
+        <ThemeProvider theme={restaurantTheme}>
             <Box sx={{ 
                 minHeight: '100vh',
                 backgroundColor: '#FFF8E1', // Warm cream background
@@ -193,21 +191,16 @@ export default function ViewAndManageItems() {
                                 Add New Item
                             </Button>
                         </Box>
-                        
-                        {/* Loading state */}
-                        {isItemsLoading ? (
-                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                                <CircularProgress sx={{ color: 'primary' }} /> {/* Match primary color */}
-                            </Box>                        ) : (
-                            <MenuItemsTable 
+                        <MenuItemsTable 
                                 items={items} 
                                 isLoading={isItemsLoading}
                                 onEditClick={handleEditClick}
                                 onDeleteClick={handleDeleteClick}
                             />
-                        )}
                     </Paper>
-                </Container>                {/* Edit Item Dialog Component */}
+                </Container>
+                                
+                {/* Edit Item Dialog Component */}
                 <EditItemDialog 
                     open={showEditModal}
                     onClose={() => setShowEditModal(false)}

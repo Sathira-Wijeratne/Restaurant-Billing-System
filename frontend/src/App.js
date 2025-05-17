@@ -3,10 +3,12 @@ import {BrowserRouter, Routes, Route} from "react-router";
 
 import {FirebaseDatabaseProvider} from '@react-firebase/database'
 import ViewAndManageItems from './components/ViewAndManageItems';
+import RestaurantHeader from './components/RestaurantHeader';
 function App() {
   return (
     <FirebaseDatabaseProvider>
       <BrowserRouter>
+          <RestaurantHeader />
         <Routes>
           <Route path="/" exact Component={ViewAndManageItems}/>
         </Routes>

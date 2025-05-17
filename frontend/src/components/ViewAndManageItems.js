@@ -1,71 +1,30 @@
-import cong from "../Firebase";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { Delete, Edit, Add, RestaurantMenu, MenuBook } from "@mui/icons-material";
-import { validateItemName, validateItemPrice } from "../utils/ValidateItem";
-import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogActions, DialogTitle, TextField, Typography, Box, Container, IconButton, CircularProgress, DialogContent, createTheme, ThemeProvider } from "@mui/material";
+import { Add, MenuBook } from "@mui/icons-material";
+import { Paper, Button, Typography, Box, Container, ThemeProvider, CircularProgress } from "@mui/material";
+import restaurantTheme from "../theme/restaurantTheme";
+import RestaurantHeader from "./RestaurantHeader";
+import AddItemDialog from "./dialogs/AddItemDialog";
+import EditItemDialog from "./dialogs/EditItemDialog";
+import MenuItemsTable from "./MenuItemsTable";
+import useMenuItems from "../hooks/useMenuItems";
 
 /**
  * TODO :
  *  Day 1:
  *      What happens if alot of items are added? Handle this
  *  Day 2:
- *      Can the edit modal be defined as a seperate file?
- *      Make sure most recent item is added to the top
- *      Make sure add button position doesn't change based on the list length (use pagination or something within a small box)
+ *      Can the edit modal be defined as a seperate file? ✅
+ *      Make sure most recent item is added to the top ✅
+ *      Make sure add button position doesn't change based on the list length (use pagination or something within a small box) ✅
  *  Day 3:
  *      Multiple deletes (via selection)
  */
 
-// Create a custom theme with restaurant colors
-const restaurantTheme = createTheme({
-    palette: {
-        primary: {
-            main: '#8D2B0B', // Warm brick red - classic restaurant color
-            light: '#B23C17',
-            dark: '#6A1F07',
-            contrastText: '#FFF'
-        },
-        secondary: {
-            main: '#1B5E20', // Forest green for accent
-            light: '#43A047',
-            dark: '#003D00',
-            contrastText: '#FFF'
-        },
-        background: {
-            default: '#FFF8E1', // Warm cream background
-            paper: '#FFFFFF',
-        },
-        text: {
-            primary: '#2C2C2C',
-            secondary: '#5F5F5F'
-        },
-    },
-    components: {
-        MuiPaper: {
-            styleOverrides: {
-                root: {
-                    boxShadow: '0px 3px 15px rgba(0,0,0,0.08)',
-                    borderRadius: 8,
-                }
-            }
-        },
-        MuiTableCell: {
-            styleOverrides: {
-                head: {
-                    fontWeight: 'bold',
-                    backgroundColor: '#F5EBD5', // Warm beige table header
-                    color: '#5F4B32',
-                }
-            }
-        }
-    }
-});
+// Theme is now imported from ../theme/restaurantTheme.js
 
 export default function ViewAndManageItems() {
-    // State variables
-    const [items, setItems] = useState([]);
+    // State variables for UI management
     const [showEditModal, setShowEditModal] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const [editItemName, setEditItemName] = useState("");
@@ -74,36 +33,9 @@ export default function ViewAndManageItems() {
     const [newItemName, setNewItemName] = useState("");
     const [newItemPrice, setNewItemPrice] = useState("");
     const [blockingAction, setBlockingAction] = useState(false);
-    const [isItemsLoading, setIsItemsLoading] = useState(true);
-
-    // Toast notifications
-    const notifyAddItem = () => toast.success("Item added");
-    const notifyAddItemFail = () => toast.error("Item not added");
-    const notifyEditItemFail = () => toast.error("Item not edited");
-    const notifyDeleteItemFail = () => toast.error("Item not deleted");
-
-    // Fetch items from Firestore on component mount
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                const querySnapshot = await getDocs(collection(cong, "items"));
-
-                const itemsArray = querySnapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                setItems(itemsArray);
-            } catch (error) {
-                console.error("Error fetching items : ", error);
-                toast.error("Failed to load items");
-            } finally {
-                setIsItemsLoading(false);
-            }
-        }
-
-        fetchData();
-    }, []);
+    
+    // Use custom hook for menu item operations
+    const { items, isItemsLoading, addItem, updateItem, deleteItem } = useMenuItems();
 
     // Handle add button click
     const handleAddClick = () => {
@@ -115,74 +47,31 @@ export default function ViewAndManageItems() {
     // Handle form submission for adding a new item
     const handleAddSubmit = async (e) => {
         e.preventDefault();
-
-        // validate fields
-        const trimmedName = newItemName.trim();
-
-        try {
-            // save the item
-            const docRef = await addDoc(collection(cong, "items"), {
-                itemName: trimmedName,
-                itemPrice: newItemPrice
-            });
-
-            // Update local state to show the new item
-            const newItem = {
-                id: docRef.id,
-                itemName: trimmedName,
-                itemPrice: newItemPrice
-            };
-
-            // Add the new item to the top of the list
-            setItems([newItem, ...items]);
-
-            // Close modal and show success message
+        const success = await addItem(newItemName, newItemPrice);
+        if (success) {
             setShowAddModal(false);
-            notifyAddItem();
-        } catch (e) {
-            console.error("Error adding item:", e);
-            notifyAddItemFail();
         }
     };
 
     // Handle form submission for editing an item
     const handleEditSubmit = async (e) => {
         e.preventDefault();
-
-        try {
-            // Trim the name before saving
-            const trimmedName = editItemName.trim();
-
-            const docRef = doc(cong, "items", editItem.id);
-            await updateDoc(docRef, {
-                itemName: trimmedName,
-                itemPrice: editItemPrice
-            });
-
-            // Update the local state to reflect changes
-            const updatedItems = items.map(item =>
-                item.id === editItem.id
-                    ? { ...item, itemName: trimmedName, itemPrice: editItemPrice }
-                    : item
-            );
-            setItems(updatedItems);
+        const success = await updateItem(editItem.id, editItemName, editItemPrice);
+        if (success) {
             setShowEditModal(false);
-        } catch (error) {
-            console.error("Error updating item : ", error);
-            notifyEditItemFail();
         }
-    }
+    };
 
+    // Handle edit button click
     const handleEditClick = (item) => {
         setEditItem(item);
         setEditItemName(item.itemName);
         setEditItemPrice(item.itemPrice);
         setShowEditModal(true);
-        console.log("edit model set to true");
-    }
+    };
 
     // Handle delete button click
-    const handleDeleteClick = async (item) => {
+    const handleDeleteClick = (item) => {
         setBlockingAction(true);
         toast.info(
             <Box sx={{ p: 1 }}>
@@ -197,16 +86,7 @@ export default function ViewAndManageItems() {
                         onClick={async () => {
                             toast.dismiss();
                             setBlockingAction(false);
-
-                            // delete item
-                            try {
-                                await deleteDoc(doc(cong, "items", item.id));
-                                setItems(items.filter(i => i.id !== item.id));
-                                toast.success('Item deleted');
-                            } catch (error) {
-                                console.error("Item not deleted: ", error);
-                                notifyDeleteItemFail();
-                            }
+                            await deleteItem(item.id);
                         }}
                     >
                         Confirm
@@ -236,42 +116,8 @@ export default function ViewAndManageItems() {
     };
 
     return (
-        <ThemeProvider theme={restaurantTheme}>
-            {/* Restaurant Header */}
-            <Box sx={{
-                width: '100%',
-                bgcolor: '#8D2B0B',
-                color: 'white',
-                py: 1, // Reduced vertical padding
-                px: 0,
-                boxShadow: '0 4px 16px 0 rgba(141,43,11,0.10)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexDirection: 'column',
-                position: 'relative',
-            }}>
-                <Box sx={{
-                    width: 44, // Further reduced logo size
-                    height: 44,
-                    bgcolor: '#FFF8E1',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    boxShadow: '0 2px 8px 0 rgba(141,43,11,0.10)',
-                    mb: 0.7 // Further reduced margin below logo
-                }}>
-                    {/* Placeholder for logo - you can replace with an <img src=... /> if you have a logo */}
-                    <RestaurantMenu sx={{ fontSize: 26, color: '#8D2B0B' }} />
-                </Box>
-                <Typography variant="h3" sx={{ fontFamily: 'Georgia, serif', fontWeight: 700, letterSpacing: 2, mb: 0, fontSize: { xs: '1.5rem', sm: '2rem' } }}>
-                    Casa del Gusto
-                </Typography>
-                <Typography variant="subtitle1" sx={{ fontFamily: 'Georgia, serif', opacity: 0.85, fontSize: { xs: '0.95rem', sm: '1.05rem' }, mt: 0 }}>
-                    Fine Dining & Exquisite Taste
-                </Typography>
-            </Box>
+        <ThemeProvider theme={restaurantTheme}>            {/* Restaurant Header Component */}
+            {/* <RestaurantHeader /> */}
             <Box sx={{ 
                 minHeight: '100vh',
                 backgroundColor: '#FFF8E1', // Warm cream background
@@ -352,202 +198,36 @@ export default function ViewAndManageItems() {
                         {isItemsLoading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
                                 <CircularProgress sx={{ color: 'primary' }} /> {/* Match primary color */}
-                            </Box>
-                        ) : items.length === 0 ? (
-                            // No items state
-                            <Paper 
-                                elevation={1} 
-                                sx={{ 
-                                    p: 3, 
-                                    textAlign: 'center', 
-                                    mt: 3,
-                                    backgroundColor: '#F9F3E6', // Warm cream background
-                                    border: '1px dashed #D2B48C' // Tan dashed border
-                                }}
-                            >
-                                <Typography variant="h6" color="#8D6E63"> {/* Warm brown text */}
-                                    No menu items found
-                                </Typography>
-                            </Paper>
-                        ) : (
-                            // Items table
-                            <TableContainer 
-                                component={Paper} 
-                                elevation={2}
-                                sx={{
-                                    maxHeight: '62vh',
-                                    overflow: 'auto',
-                                    mt: 3,
-                                    borderRadius: 2,
-                                    border: '1px solid #E8E0D0' // Subtle border
-                                }}
-                            >
-                                <Table stickyHeader>
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell>Item Name</TableCell>
-                                            <TableCell>Price (Rs.)</TableCell>
-                                            <TableCell align="right"></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {items.map((item) => (
-                                            <TableRow 
-                                                key={item.id} 
-                                                hover
-                                                sx={{
-                                                    '&:nth-of-type(odd)': {
-                                                        backgroundColor: '#FAFAF7', // Subtle alternating row color
-                                                    },
-                                                }}
-                                            >
-                                                <TableCell sx={{ fontWeight: 500 }}>{item.itemName}</TableCell>
-                                                <TableCell>{item.itemPrice}</TableCell>
-                                                <TableCell align="right">
-                                                    <IconButton
-                                                        color="default"
-                                                        onClick={() => handleEditClick(item)}
-                                                        size="small"
-                                                        sx={{ mr: 0.5 }}
-                                                    >
-                                                        <Edit />
-                                                    </IconButton>
-                                                    <IconButton
-                                                        color="primary"
-                                                        onClick={() => handleDeleteClick(item)}
-                                                        size="small"
-                                                    >
-                                                        <Delete />
-                                                    </IconButton>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+                            </Box>                        ) : (
+                            <MenuItemsTable 
+                                items={items} 
+                                isLoading={isItemsLoading}
+                                onEditClick={handleEditClick}
+                                onDeleteClick={handleDeleteClick}
+                            />
                         )}
                     </Paper>
-                </Container>
-
-                {/* Edit modal */}
-                <Dialog
+                </Container>                {/* Edit Item Dialog Component */}
+                <EditItemDialog 
                     open={showEditModal}
                     onClose={() => setShowEditModal(false)}
-                    maxWidth="sm"
-                    fullWidth
-                    PaperProps={{
-                        sx: { borderRadius: 2 }
-                    }}
-                >
-                    <DialogTitle sx={{ 
-                        backgroundColor: '#F5EBD5', // Warm beige header
-                        color: '#5F4B32', // Warm brown text
-                        fontFamily: 'Georgia, serif' // Classic restaurant font
-                    }}>
-                        Edit Menu Item
-                    </DialogTitle>
-                    <form onSubmit={handleEditSubmit}>
-                        <DialogContent>
-                            <TextField
-                                label="Item Name"
-                                fullWidth
-                                required
-                                value={editItemName}
-                                margin="normal"
-                                onChange={(e) => {
-                                    setEditItemName(validateItemName(e.target.value));
-                                }}
-                            />
-                            <TextField
-                                label="Item Price (Rs.)"
-                                type="number"
-                                fullWidth
-                                required
-                                value={editItemPrice}
-                                margin="normal"
-                                slot={{ min: 0, max: 50000 }}
-                                onChange={(e) => {
-                                    setEditItemPrice(validateItemPrice(e.target.value));
-                                }}
-                            />
-                        </DialogContent>
-                        <DialogActions sx={{ px: 3, pb: 2 }}>
-                            <Button
-                                onClick={() => setShowEditModal(false)}
-                                color="inherit"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                            >
-                                Save Changes
-                            </Button>
-                        </DialogActions>
-                    </form>
-                </Dialog>
+                    onSubmit={handleEditSubmit}
+                    editItemName={editItemName}
+                    setEditItemName={setEditItemName}
+                    editItemPrice={editItemPrice}
+                    setEditItemPrice={setEditItemPrice}
+                />
 
-                {/* Add modal */}
-                <Dialog
+                {/* Add Item Dialog Component */}
+                <AddItemDialog 
                     open={showAddModal}
                     onClose={() => setShowAddModal(false)}
-                    maxWidth="sm"
-                    fullWidth
-                    slotProps={{
-                        paper: {sx: { borderRadius: 2 }}
-                    }}
-                >
-                    <DialogTitle sx={{ 
-                        backgroundColor: '#F5EBD5', // Warm beige header
-                        color: '#5F4B32', // Warm brown text
-                        fontFamily: 'Georgia, serif' // Classic restaurant font
-                    }}>
-                        Add New Menu Item
-                    </DialogTitle>
-                    <form onSubmit={handleAddSubmit}>
-                        <DialogContent>
-                            <TextField
-                                label="Item Name"
-                                fullWidth
-                                required
-                                value={newItemName}
-                                margin="normal"
-                                onChange={(e) => {
-                                    setNewItemName(validateItemName(e.target.value));
-                                }}
-                            />
-                            <TextField
-                                label="Item Price (Rs.)"
-                                type="number"
-                                fullWidth
-                                required
-                                value={newItemPrice}
-                                margin="normal"
-                                slot={{ min: 0, max: 50000 }}
-                                onChange={(e) => {
-                                    setNewItemPrice(validateItemPrice(e.target.value));
-                                }}
-                            />
-                        </DialogContent>
-                        <DialogActions sx={{ px: 3, pb: 2 }}>
-                            <Button
-                                onClick={() => setShowAddModal(false)}
-                                color="inherit"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                            >
-                                Add Item
-                            </Button>
-                        </DialogActions>
-                    </form>
-                </Dialog>
+                    onSubmit={handleAddSubmit}
+                    newItemName={newItemName}
+                    setNewItemName={setNewItemName}
+                    newItemPrice={newItemPrice}
+                    setNewItemPrice={setNewItemPrice}
+                />
             </Box>
         </ThemeProvider>
     );

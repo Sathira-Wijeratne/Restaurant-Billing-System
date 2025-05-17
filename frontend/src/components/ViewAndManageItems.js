@@ -12,18 +12,12 @@ import useMenuItems from "../hooks/useMenuItems";
  * TODO :
  *  Day 1:
  *      What happens if alot of items are added? Handle this
- *  Day 2:
- *      Can the edit modal be defined as a seperate file? ✅
- *      Make sure most recent item is added to the top ✅
- *      Make sure add button position doesn't change based on the list length (use pagination or something within a small box) ✅
  *  Day 3:
  *      Multiple deletes (via selection)
  */
 
-// Theme is now imported from ../theme/restaurantTheme.js
-
 export default function ViewAndManageItems() {
-    // State variables for UI management
+    // State variables
     const [showEditModal, setShowEditModal] = useState(false);
     const [editItem, setEditItem] = useState(null);
     const [editItemName, setEditItemName] = useState("");
@@ -32,8 +26,8 @@ export default function ViewAndManageItems() {
     const [newItemName, setNewItemName] = useState("");
     const [newItemPrice, setNewItemPrice] = useState("");
     const [blockingAction, setBlockingAction] = useState(false);
-    
-    // Use custom hook for menu item operations
+
+    // custom hook for menu item operations
     const { items, isItemsLoading, addItem, updateItem, deleteItem } = useMenuItems();
 
     // Handle add button click
@@ -116,7 +110,7 @@ export default function ViewAndManageItems() {
 
     return (
         <ThemeProvider theme={restaurantTheme}>
-            <Box sx={{ 
+            <Box sx={{
                 minHeight: '100vh',
                 backgroundColor: '#FFF8E1', // Warm cream background
                 backgroundImage: 'linear-gradient(rgba(255, 248, 225, 0.8), rgba(255, 248, 225, 0.8)), url("https://www.transparenttextures.com/patterns/food.png")',
@@ -139,7 +133,7 @@ export default function ViewAndManageItems() {
                         }}
                     />
                 )}
-                
+
                 {/* Toast notifications */}
                 <ToastContainer
                     position="bottom-center"
@@ -150,12 +144,12 @@ export default function ViewAndManageItems() {
                     theme="light"
                     style={{ width: 'auto' }}
                 />
-                
+
                 {/* Main content */}
                 <Container maxWidth="md">
-                    <Paper elevation={3} sx={{ 
-                        p: 3, 
-                        mb: 4, 
+                    <Paper elevation={3} sx={{
+                        p: 3,
+                        mb: 4,
                         borderTop: '6px solid #8D2B0B', // Warm brick red accent line
                         backgroundColor: 'white'
                     }}>
@@ -164,10 +158,10 @@ export default function ViewAndManageItems() {
                             justifyContent: 'space-between',
                             alignItems: 'center'
                         }}>
-                            <Typography 
-                                variant="h4" 
-                                sx={{ 
-                                    display: 'flex', 
+                            <Typography
+                                variant="h4"
+                                sx={{
+                                    display: 'flex',
                                     alignItems: 'center',
                                     color: '#5F4B32', // Warm brown text
                                     fontFamily: 'Georgia, serif' // Classic restaurant font
@@ -181,7 +175,7 @@ export default function ViewAndManageItems() {
                                 color="primary"
                                 onClick={handleAddClick}
                                 startIcon={<Add />}
-                                sx={{ 
+                                sx={{
                                     borderRadius: 2,
                                     px: 2,
                                     py: 1,
@@ -191,17 +185,17 @@ export default function ViewAndManageItems() {
                                 Add New Item
                             </Button>
                         </Box>
-                        <MenuItemsTable 
-                                items={items} 
-                                isLoading={isItemsLoading}
-                                onEditClick={handleEditClick}
-                                onDeleteClick={handleDeleteClick}
-                            />
+                        <MenuItemsTable
+                            items={items}
+                            isLoading={isItemsLoading}
+                            onEditClick={handleEditClick}
+                            onDeleteClick={handleDeleteClick}
+                        />
                     </Paper>
                 </Container>
-                                
+
                 {/* Edit Item Dialog Component */}
-                <EditItemDialog 
+                <EditItemDialog
                     open={showEditModal}
                     onClose={() => setShowEditModal(false)}
                     onSubmit={handleEditSubmit}
@@ -212,7 +206,7 @@ export default function ViewAndManageItems() {
                 />
 
                 {/* Add Item Dialog Component */}
-                <AddItemDialog 
+                <AddItemDialog
                     open={showAddModal}
                     onClose={() => setShowAddModal(false)}
                     onSubmit={handleAddSubmit}

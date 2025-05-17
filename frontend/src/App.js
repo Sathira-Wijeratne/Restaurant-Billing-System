@@ -11,7 +11,6 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" exact Component={ViewAndManageItems}/>
-          <Route path="/add-item" exact Component={AddItem}/>
         </Routes>
       </BrowserRouter>
     </FirebaseDatabaseProvider>

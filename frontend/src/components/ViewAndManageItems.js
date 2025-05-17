@@ -1,10 +1,10 @@
 import cong from "../Firebase";
 import { useEffect, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
+import { Delete, Edit, Add, RestaurantMenu, MenuBook } from "@mui/icons-material";
 import { validateItemName, validateItemPrice } from "../utils/ValidateItem";
 import { collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "firebase/firestore";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogActions, DialogTitle, TextField, Typography, Box, Container, IconButton, CircularProgress, DialogContent } from "@mui/material";
-import { Delete, Edit, Add } from "@mui/icons-material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, Dialog, DialogActions, DialogTitle, TextField, Typography, Box, Container, IconButton, CircularProgress, DialogContent, createTheme, ThemeProvider } from "@mui/material";
 
 /**
  * TODO :
@@ -14,7 +14,54 @@ import { Delete, Edit, Add } from "@mui/icons-material";
  *      Can the edit modal be defined as a seperate file?
  *      Make sure most recent item is added to the top
  *      Make sure add button position doesn't change based on the list length (use pagination or something within a small box)
+ *  Day 3:
+ *      Multiple deletes (via selection)
  */
+
+// Create a custom theme with restaurant colors
+const restaurantTheme = createTheme({
+    palette: {
+        primary: {
+            main: '#8D2B0B', // Warm brick red - classic restaurant color
+            light: '#B23C17',
+            dark: '#6A1F07',
+            contrastText: '#FFF'
+        },
+        secondary: {
+            main: '#1B5E20', // Forest green for accent
+            light: '#43A047',
+            dark: '#003D00',
+            contrastText: '#FFF'
+        },
+        background: {
+            default: '#FFF8E1', // Warm cream background
+            paper: '#FFFFFF',
+        },
+        text: {
+            primary: '#2C2C2C',
+            secondary: '#5F5F5F'
+        },
+    },
+    components: {
+        MuiPaper: {
+            styleOverrides: {
+                root: {
+                    boxShadow: '0px 3px 15px rgba(0,0,0,0.08)',
+                    borderRadius: 8,
+                }
+            }
+        },
+        MuiTableCell: {
+            styleOverrides: {
+                head: {
+                    fontWeight: 'bold',
+                    backgroundColor: '#F5EBD5', // Warm beige table header
+                    color: '#5F4B32',
+                }
+            }
+        }
+    }
+});
 
 export default function ViewAndManageItems() {
     // State variables
@@ -28,7 +75,7 @@ export default function ViewAndManageItems() {
     const [newItemPrice, setNewItemPrice] = useState("");
     const [blockingAction, setBlockingAction] = useState(false);
     const [isItemsLoading, setIsItemsLoading] = useState(true);
-    
+
     // Toast notifications
     const notifyAddItem = () => toast.success("Item added");
     const notifyAddItemFail = () => toast.error("Item not added");
@@ -57,7 +104,7 @@ export default function ViewAndManageItems() {
 
         fetchData();
     }, []);
-    
+
     // Handle add button click
     const handleAddClick = () => {
         setNewItemName("");
@@ -188,203 +235,284 @@ export default function ViewAndManageItems() {
     };
 
     return (
-        <>
-        {/* Overlay for blocking action */}
-            {blockingAction && (
-                <Box
-                    sx={{
-                        position: 'fixed',
-                        top: 0,
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        bgcolor: 'rgba(0,0,0,0.4)',
-                        zIndex: 9999,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center'
-                    }}
-                />
-            )}
-            {/* Toast notifications */}
-            <ToastContainer
-                position="top-center"
-                autoClose={1000}
-                pauseOnHover={false}
-                hideProgressBar={true}
-                closeButton={false}
-                theme="light"
-                style={{ width: 'auto' }}
-            />
-            {/* Main content */}
-            <Container maxWidth="md">
-                <Typography variant="h4" sx={{ my: 3 }}>
-                    Items: {items.length}
-                </Typography>
-                {/* Loading state */}
-                {isItemsLoading ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                        <CircularProgress />
-                    </Box>
-                ) : items.length === 0 ? (
-                    // No items state
-                    <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
-                        <Typography variant="h6" color="text.secondary">
-                            No items found
-                        </Typography>
-                    </Paper>
-                ) : (
-                    // Items table
-                    <TableContainer component={Paper} elevation={1}>
-                        <Table>
-                            <TableHead>
-                                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                    <TableCell>Item Name</TableCell>
-                                    <TableCell>Price (Rs.)</TableCell>
-                                    <TableCell align="right"></TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
-                                {items.map((item) => (
-                                    <TableRow key={item.id} hover>
-                                        <TableCell>{item.itemName}</TableCell>
-                                        <TableCell>{item.itemPrice}</TableCell>
-                                        <TableCell align="right">
-                                            <IconButton
-                                                color="primary"
-                                                onClick={() => handleEditClick(item)}
-                                                size="small"
-                                            >
-                                                <Edit />
-                                            </IconButton>
-                                            <IconButton
-                                                color="error"
-                                                onClick={() => handleDeleteClick(item)}
-                                                size="small"
-                                            >
-                                                <Delete />
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                    </TableContainer>
+        <ThemeProvider theme={restaurantTheme}>
+            <Box sx={{ 
+                minHeight: '100vh',
+                backgroundColor: '#FFF8E1', // Warm cream background
+                backgroundImage: 'linear-gradient(rgba(255, 248, 225, 0.8), rgba(255, 248, 225, 0.8)), url("https://www.transparenttextures.com/patterns/food.png")',
+                pt: 2
+            }}>
+                {/* Overlay for blocking action */}
+                {blockingAction && (
+                    <Box
+                        sx={{
+                            position: 'fixed',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            bgcolor: 'rgba(64, 30, 13, 0.6)', // Warm brown overlay
+                            zIndex: 9999,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center'
+                        }}
+                    />
                 )}
-                <Box sx={{ mt: 3, textAlign: 'right' }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handleAddClick}
-                        startIcon={<Add />}
-                    >
-                        Add New Item
-                    </Button>
-                </Box>
-            </Container>
+                
+                {/* Toast notifications */}
+                <ToastContainer
+                    position="top-center"
+                    autoClose={1000}
+                    pauseOnHover={false}
+                    hideProgressBar={true}
+                    closeButton={false}
+                    theme="light"
+                    style={{ width: 'auto' }}
+                />
+                
+                {/* Main content */}
+                <Container maxWidth="md">
+                    <Paper elevation={3} sx={{ 
+                        p: 3, 
+                        mb: 4, 
+                        borderTop: '6px solid #8D2B0B', // Warm brick red accent line
+                        backgroundColor: 'white'
+                    }}>
+                        <Box sx={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center'
+                        }}>
+                            <Typography 
+                                variant="h4" 
+                                sx={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center',
+                                    color: '#5F4B32', // Warm brown text
+                                    fontFamily: 'Georgia, serif' // Classic restaurant font
+                                }}
+                            >
+                                <MenuBook sx={{ mr: 1, fontSize: 'inherit', color: '#8D2B0B' }} />
+                                Menu Items: {items.length}
+                            </Typography>
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleAddClick}
+                                startIcon={<Add />}
+                                sx={{ 
+                                    borderRadius: 2,
+                                    px: 2,
+                                    py: 1,
+                                    boxShadow: '0 4px 8px rgba(141, 43, 11, 0.2)' // Subtle shadow
+                                }}
+                            >
+                                Add New Item
+                            </Button>
+                        </Box>
+                        
+                        {/* Loading state */}
+                        {isItemsLoading ? (
+                            <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                                <CircularProgress sx={{ color: '#8D2B0B' }} /> {/* Match primary color */}
+                            </Box>
+                        ) : items.length === 0 ? (
+                            // No items state
+                            <Paper 
+                                elevation={1} 
+                                sx={{ 
+                                    p: 3, 
+                                    textAlign: 'center', 
+                                    mt: 3,
+                                    backgroundColor: '#F9F3E6', // Warm cream background
+                                    border: '1px dashed #D2B48C' // Tan dashed border
+                                }}
+                            >
+                                <Typography variant="h6" color="#8D6E63"> {/* Warm brown text */}
+                                    No menu items found. Add some dishes to get started!
+                                </Typography>
+                            </Paper>
+                        ) : (
+                            // Items table
+                            <TableContainer 
+                                component={Paper} 
+                                elevation={2}
+                                sx={{
+                                    maxHeight: '62vh',
+                                    overflow: 'auto',
+                                    mt: 3,
+                                    borderRadius: 2,
+                                    border: '1px solid #E8E0D0' // Subtle border
+                                }}
+                            >
+                                <Table stickyHeader>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Item Name</TableCell>
+                                            <TableCell>Price (Rs.)</TableCell>
+                                            <TableCell align="right"></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {items.map((item) => (
+                                            <TableRow 
+                                                key={item.id} 
+                                                hover
+                                                sx={{
+                                                    '&:nth-of-type(odd)': {
+                                                        backgroundColor: '#FAFAF7', // Subtle alternating row color
+                                                    },
+                                                }}
+                                            >
+                                                <TableCell sx={{ fontWeight: 500 }}>{item.itemName}</TableCell>
+                                                <TableCell>{item.itemPrice}</TableCell>
+                                                <TableCell align="right">
+                                                    <IconButton
+                                                        color="secondary"
+                                                        onClick={() => handleEditClick(item)}
+                                                        size="small"
+                                                        sx={{ mr: 0.5 }}
+                                                    >
+                                                        <Edit />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        color="primary"
+                                                        onClick={() => handleDeleteClick(item)}
+                                                        size="small"
+                                                    >
+                                                        <Delete />
+                                                    </IconButton>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                        )}
+                    </Paper>
+                </Container>
 
-            {/* Edit modal */}
-            <Dialog
-                open={showEditModal}
-                onClose={() => setShowEditModal(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>Edit Item</DialogTitle>
-                <form onSubmit={handleEditSubmit}>
-                    <DialogContent>
-                        <TextField
-                            label="Item Name"
-                            fullWidth
-                            required
-                            value={editItemName}
-                            margin="normal"
-                            onChange={(e) => {
-                                setEditItemName(validateItemName(e.target.value));
-                            }}
-                        />
-                        <TextField
-                            label="Item Price (Rs.)"
-                            type="number"
-                            fullWidth
-                            required
-                            value={editItemPrice}
-                            margin="normal"
-                            slot={{ min: 0, max: 50000 }}
-                            onChange={(e) => {
-                                // use better approach than this, notify the user or something rather than just setting values
-                                setEditItemPrice(validateItemPrice(e.target.value));
-                            }}
-                        />
-                    </DialogContent>
-                    <DialogActions sx={{ px: 3, pb: 2 }}>
-                        <Button
-                            onClick={() => setShowEditModal(false)}
-                            color="inherit"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                        >
-                            Save Changes
-                        </Button>
-                    </DialogActions>
-                </form>
-            </Dialog>
+                {/* Edit modal */}
+                <Dialog
+                    open={showEditModal}
+                    onClose={() => setShowEditModal(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: { borderRadius: 2 }
+                    }}
+                >
+                    <DialogTitle sx={{ 
+                        backgroundColor: '#F5EBD5', // Warm beige header
+                        color: '#5F4B32', // Warm brown text
+                        fontFamily: 'Georgia, serif' // Classic restaurant font
+                    }}>
+                        Edit Menu Item
+                    </DialogTitle>
+                    <form onSubmit={handleEditSubmit}>
+                        <DialogContent>
+                            <TextField
+                                label="Item Name"
+                                fullWidth
+                                required
+                                value={editItemName}
+                                margin="normal"
+                                onChange={(e) => {
+                                    setEditItemName(validateItemName(e.target.value));
+                                }}
+                            />
+                            <TextField
+                                label="Item Price (Rs.)"
+                                type="number"
+                                fullWidth
+                                required
+                                value={editItemPrice}
+                                margin="normal"
+                                slot={{ min: 0, max: 50000 }}
+                                onChange={(e) => {
+                                    setEditItemPrice(validateItemPrice(e.target.value));
+                                }}
+                            />
+                        </DialogContent>
+                        <DialogActions sx={{ px: 3, pb: 2 }}>
+                            <Button
+                                onClick={() => setShowEditModal(false)}
+                                color="inherit"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                            >
+                                Save Changes
+                            </Button>
+                        </DialogActions>
+                    </form>
+                </Dialog>
 
-            {/* Add modal */}
-            <Dialog
-                open={showAddModal}
-                onClose={() => setShowAddModal(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>Add New Item</DialogTitle>
-                <form onSubmit={handleAddSubmit}>
-                    <DialogContent>
-                        <TextField
-                            label="Item Name"
-                            fullWidth
-                            required
-                            value={newItemName}
-                            margin="normal"
-                            onChange={(e) => {
-                                setNewItemName(validateItemName(e.target.value));
-                            }}
-                        />
-                        <TextField
-                            label="Item Price (Rs.)"
-                            type="number"
-                            fullWidth
-                            required
-                            value={newItemPrice}
-                            margin="normal"
-                            slot={{ min: 0, max: 50000 }}
-                            onChange={(e) => {
-                                setNewItemPrice(validateItemPrice(e.target.value));
-                            }}
-                        />
-                    </DialogContent>
-                    <DialogActions sx={{ px: 3, pb: 2 }}>
-                        <Button
-                            onClick={() => setShowAddModal(false)}
-                            color="inherit"
-                        >
-                            Cancel
-                        </Button>
-                        <Button
-                            type="submit"
-                            variant="contained"
-                            color="primary"
-                        >
-                            Add Item
-                        </Button>
-                    </DialogActions>
-                </form>
-            </Dialog>
-        </>
+                {/* Add modal */}
+                <Dialog
+                    open={showAddModal}
+                    onClose={() => setShowAddModal(false)}
+                    maxWidth="sm"
+                    fullWidth
+                    PaperProps={{
+                        sx: { borderRadius: 2 }
+                    }}
+                >
+                    <DialogTitle sx={{ 
+                        backgroundColor: '#F5EBD5', // Warm beige header
+                        color: '#5F4B32', // Warm brown text
+                        fontFamily: 'Georgia, serif' // Classic restaurant font
+                    }}>
+                        Add New Menu Item
+                    </DialogTitle>
+                    <form onSubmit={handleAddSubmit}>
+                        <DialogContent>
+                            <TextField
+                                label="Item Name"
+                                fullWidth
+                                required
+                                value={newItemName}
+                                margin="normal"
+                                onChange={(e) => {
+                                    setNewItemName(validateItemName(e.target.value));
+                                }}
+                            />
+                            <TextField
+                                label="Item Price (Rs.)"
+                                type="number"
+                                fullWidth
+                                required
+                                value={newItemPrice}
+                                margin="normal"
+                                slot={{ min: 0, max: 50000 }}
+                                onChange={(e) => {
+                                    setNewItemPrice(validateItemPrice(e.target.value));
+                                }}
+                            />
+                        </DialogContent>
+                        <DialogActions sx={{ px: 3, pb: 2 }}>
+                            <Button
+                                onClick={() => setShowAddModal(false)}
+                                color="inherit"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                color="primary"
+                            >
+                                Add Item
+                            </Button>
+                        </DialogActions>
+                    </form>
+                </Dialog>
+            </Box>
+        </ThemeProvider>
     );
 }

@@ -9,21 +9,15 @@ import { Delete, Edit, Add } from "@mui/icons-material";
 /**
  * TODO :
  *  Day 1:
- *      Beautify the page
- *      Add proper html ids and classnames and stuff, and structure the code properly
- *      Handle errors
- *      Do something about the loading time or display something till data loads or prevent data being fetched everytime
  *      What happens if alot of items are added? Handle this
  *  Day 2:
  *      Can the edit modal be defined as a seperate file?
  *      Make sure most recent item is added to the top
- *      Handle when no items being there
  *      Make sure add button position doesn't change based on the list length (use pagination or something within a small box)
- *      Make the Edit form come in proper place
- *      Beautify dialog box, seperate buttons
  */
 
 export default function ViewAndManageItems() {
+    // State variables
     const [items, setItems] = useState([]);
     const [showEditModal, setShowEditModal] = useState(false);
     const [editItem, setEditItem] = useState(null);
@@ -33,13 +27,15 @@ export default function ViewAndManageItems() {
     const [newItemName, setNewItemName] = useState("");
     const [newItemPrice, setNewItemPrice] = useState("");
     const [blockingAction, setBlockingAction] = useState(false);
-    const [loading, setLoading] = useState(true);
-
-    const notifyEditItemFail = () => toast.error("Item not edited");
-    const notifyDeleteItemFail = () => toast.error("Item not deleted");
+    const [isItemsLoading, setIsItemsLoading] = useState(true);
+    
+    // Toast notifications
     const notifyAddItem = () => toast.success("Item added");
     const notifyAddItemFail = () => toast.error("Item not added");
+    const notifyEditItemFail = () => toast.error("Item not edited");
+    const notifyDeleteItemFail = () => toast.error("Item not deleted");
 
+    // Fetch items from Firestore on component mount
     useEffect(() => {
         async function fetchData() {
             try {
@@ -55,13 +51,54 @@ export default function ViewAndManageItems() {
                 console.error("Error fetching items : ", error);
                 toast.error("Failed to load items");
             } finally {
-                setLoading(false);
+                setIsItemsLoading(false);
             }
         }
 
         fetchData();
     }, []);
+    
+    // Handle add button click
+    const handleAddClick = () => {
+        setNewItemName("");
+        setNewItemPrice("");
+        setShowAddModal(true);
+    };
 
+    // Handle form submission for adding a new item
+    const handleAddSubmit = async (e) => {
+        e.preventDefault();
+
+        // validate fields
+        const trimmedName = newItemName.trim();
+
+        try {
+            // save the item
+            const docRef = await addDoc(collection(cong, "items"), {
+                itemName: trimmedName,
+                itemPrice: newItemPrice
+            });
+
+            // Update local state to show the new item
+            const newItem = {
+                id: docRef.id,
+                itemName: trimmedName,
+                itemPrice: newItemPrice
+            };
+
+            // Add the new item to the top of the list
+            setItems([newItem, ...items]);
+
+            // Close modal and show success message
+            setShowAddModal(false);
+            notifyAddItem();
+        } catch (e) {
+            console.error("Error adding item:", e);
+            notifyAddItemFail();
+        }
+    };
+
+    // Handle form submission for editing an item
     const handleEditSubmit = async (e) => {
         e.preventDefault();
 
@@ -97,6 +134,7 @@ export default function ViewAndManageItems() {
         console.log("edit model set to true");
     }
 
+    // Handle delete button click
     const handleDeleteClick = async (item) => {
         setBlockingAction(true);
         toast.info(
@@ -149,51 +187,9 @@ export default function ViewAndManageItems() {
         );
     };
 
-    const handleAddClick = () => {
-        setNewItemName("");
-        setNewItemPrice("");
-        setShowAddModal(true);
-    };
-
-    const handleAddSubmit = async (e) => {
-        e.preventDefault();
-
-        // validate fields
-        const trimmedName = newItemName.trim();
-
-        // if (!trimmedName) {
-        //     notifyAddItemFail();
-        //     return;
-        // }
-
-        try {
-            // save the item
-            const docRef = await addDoc(collection(cong, "items"), {
-                itemName: trimmedName,
-                itemPrice: newItemPrice
-            });
-
-            // Update local state to show the new item
-            const newItem = {
-                id: docRef.id,
-                itemName: trimmedName,
-                itemPrice: newItemPrice
-            };
-
-            // Add the new item to the top of the list
-            setItems([newItem, ...items]);
-
-            // Close modal and show success message
-            setShowAddModal(false);
-            notifyAddItem();
-        } catch (e) {
-            console.error("Error adding item:", e);
-            notifyAddItemFail();
-        }
-    };
-
     return (
         <>
+        {/* Overlay for blocking action */}
             {blockingAction && (
                 <Box
                     sx={{
@@ -210,174 +206,185 @@ export default function ViewAndManageItems() {
                     }}
                 />
             )}
-            <div>
-                {/* the width is too much */}
-                <ToastContainer position="top-center" autoClose={1000} pauseOnHover={false} hideProgressBar={true} closeButton={false} theme="light" style={{ width: 'auto' }} />
-                <Container maxWidth="md">
-                    <Typography variant="h4" sx={{ my: 3 }}>
-                        Items: {items.length}
-                    </Typography>
-                    {loading ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : items.length === 0 ? (
-                        <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
-                            <Typography variant="h6" color="text.secondary">
-                                No items found
-                            </Typography>
-                        </Paper>
-                    ) : (
-                        <TableContainer component={Paper} elevation={1}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-                                        <TableCell>Item Name</TableCell>
-                                        <TableCell>Price (Rs.)</TableCell>
-                                        <TableCell align="right"></TableCell>
+            {/* Toast notifications */}
+            <ToastContainer
+                position="top-center"
+                autoClose={1000}
+                pauseOnHover={false}
+                hideProgressBar={true}
+                closeButton={false}
+                theme="light"
+                style={{ width: 'auto' }}
+            />
+            {/* Main content */}
+            <Container maxWidth="md">
+                <Typography variant="h4" sx={{ my: 3 }}>
+                    Items: {items.length}
+                </Typography>
+                {/* Loading state */}
+                {isItemsLoading ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
+                        <CircularProgress />
+                    </Box>
+                ) : items.length === 0 ? (
+                    // No items state
+                    <Paper elevation={2} sx={{ p: 3, textAlign: 'center' }}>
+                        <Typography variant="h6" color="text.secondary">
+                            No items found
+                        </Typography>
+                    </Paper>
+                ) : (
+                    // Items table
+                    <TableContainer component={Paper} elevation={1}>
+                        <Table>
+                            <TableHead>
+                                <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
+                                    <TableCell>Item Name</TableCell>
+                                    <TableCell>Price (Rs.)</TableCell>
+                                    <TableCell align="right"></TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                {items.map((item) => (
+                                    <TableRow key={item.id} hover>
+                                        <TableCell>{item.itemName}</TableCell>
+                                        <TableCell>{item.itemPrice}</TableCell>
+                                        <TableCell align="right">
+                                            <IconButton
+                                                color="primary"
+                                                onClick={() => handleEditClick(item)}
+                                                size="small"
+                                            >
+                                                <Edit />
+                                            </IconButton>
+                                            <IconButton
+                                                color="error"
+                                                onClick={() => handleDeleteClick(item)}
+                                                size="small"
+                                            >
+                                                <Delete />
+                                            </IconButton>
+                                        </TableCell>
                                     </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {items.map((item) => (
-                                        <TableRow key={item.id} hover>
-                                            <TableCell>{item.itemName}</TableCell>
-                                            <TableCell>{item.itemPrice}</TableCell>
-                                            <TableCell align="right">
-                                                <IconButton
-                                                    color="primary"
-                                                    onClick={() => handleEditClick(item)}
-                                                    size="small"
-                                                >
-                                                    <Edit />
-                                                </IconButton>
-                                                <IconButton
-                                                    color="error"
-                                                    onClick={() => handleDeleteClick(item)}
-                                                    size="small"
-                                                >
-                                                    <Delete />
-                                                </IconButton>
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                    )}                    <Box sx={{ mt: 3, textAlign: 'right' }}>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                )}
+                <Box sx={{ mt: 3, textAlign: 'right' }}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleAddClick}
+                        startIcon={<Add />}
+                    >
+                        Add New Item
+                    </Button>
+                </Box>
+            </Container>
+
+            {/* Edit modal */}
+            <Dialog
+                open={showEditModal}
+                onClose={() => setShowEditModal(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Edit Item</DialogTitle>
+                <form onSubmit={handleEditSubmit}>
+                    <DialogContent>
+                        <TextField
+                            label="Item Name"
+                            fullWidth
+                            required
+                            value={editItemName}
+                            margin="normal"
+                            onChange={(e) => {
+                                setEditItemName(validateItemName(e.target.value));
+                            }}
+                        />
+                        <TextField
+                            label="Item Price (Rs.)"
+                            type="number"
+                            fullWidth
+                            required
+                            value={editItemPrice}
+                            margin="normal"
+                            slot={{ min: 0, max: 50000 }}
+                            onChange={(e) => {
+                                // use better approach than this, notify the user or something rather than just setting values
+                                setEditItemPrice(validateItemPrice(e.target.value));
+                            }}
+                        />
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
                         <Button
+                            onClick={() => setShowEditModal(false)}
+                            color="inherit"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
                             variant="contained"
                             color="primary"
-                            onClick={handleAddClick}
-                            startIcon={<Add />}
                         >
-                            Add New Item
+                            Save Changes
                         </Button>
-                    </Box>
-                </Container>
+                    </DialogActions>
+                </form>
+            </Dialog>
 
-                {/* Edit modal */}
-                <Dialog
-                    open={showEditModal}
-                    onClose={() => setShowEditModal(false)}
-                    maxWidth="sm"
-                    fullWidth
-                >
-                    <DialogTitle>Edit Item</DialogTitle>
-                    <form onSubmit={handleEditSubmit}>
-                        <DialogContent>
-                            <TextField
-                                label="Item Name"
-                                fullWidth
-                                required
-                                value={editItemName}
-                                margin="normal"
-                                onChange={(e) => {
-                                    setEditItemName(validateItemName(e.target.value));
-                                }}
-                            />
-                            <TextField
-                                label="Item Price (Rs.)"
-                                type="number"
-                                fullWidth
-                                required
-                                value={editItemPrice}
-                                margin="normal"
-                                slot={{ min: 0, max: 50000 }}
-                                onChange={(e) => {
-                                    // use better approach than this, notify the user or something rather than just setting values
-                                    setEditItemPrice(validateItemPrice(e.target.value));
-                                }}
-                            />
-                        </DialogContent>
-                        <DialogActions sx={{ px: 3, pb: 2 }}>
-                            <Button
-                                onClick={() => setShowEditModal(false)}
-                                color="inherit"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                            >
-                                Save Changes
-                            </Button>
-                        </DialogActions>
-                    </form>
-                </Dialog>
-
-                {/* Add modal */}
-                <Dialog
-                    open={showAddModal}
-                    onClose={() => setShowAddModal(false)}
-                    maxWidth="sm"
-                    fullWidth
-                >
-                    <DialogTitle>Add New Item</DialogTitle>
-                    <form onSubmit={handleAddSubmit}>
-                        <DialogContent>
-                            <TextField
-                                label="Item Name"
-                                fullWidth
-                                required
-                                value={newItemName}
-                                margin="normal"
-                                onChange={(e) => {
-                                    setNewItemName(validateItemName(e.target.value));
-                                }}
-                            />
-                            <TextField
-                                label="Item Price (Rs.)"
-                                type="number"
-                                fullWidth
-                                required
-                                value={newItemPrice}
-                                margin="normal"
-                                slot={{ min: 0, max: 50000 }}
-                                onChange={(e) => {
-                                    setNewItemPrice(validateItemPrice(e.target.value));
-                                }}
-                            />
-                        </DialogContent>
-                        <DialogActions sx={{ px: 3, pb: 2 }}>
-                            <Button
-                                onClick={() => setShowAddModal(false)}
-                                color="inherit"
-                            >
-                                Cancel
-                            </Button>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                color="primary"
-                            >
-                                Add Item
-                            </Button>
-                        </DialogActions>
-                    </form>
-                </Dialog>
-            </div>
+            {/* Add modal */}
+            <Dialog
+                open={showAddModal}
+                onClose={() => setShowAddModal(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Add New Item</DialogTitle>
+                <form onSubmit={handleAddSubmit}>
+                    <DialogContent>
+                        <TextField
+                            label="Item Name"
+                            fullWidth
+                            required
+                            value={newItemName}
+                            margin="normal"
+                            onChange={(e) => {
+                                setNewItemName(validateItemName(e.target.value));
+                            }}
+                        />
+                        <TextField
+                            label="Item Price (Rs.)"
+                            type="number"
+                            fullWidth
+                            required
+                            value={newItemPrice}
+                            margin="normal"
+                            slot={{ min: 0, max: 50000 }}
+                            onChange={(e) => {
+                                setNewItemPrice(validateItemPrice(e.target.value));
+                            }}
+                        />
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, pb: 2 }}>
+                        <Button
+                            onClick={() => setShowAddModal(false)}
+                            color="inherit"
+                        >
+                            Cancel
+                        </Button>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            color="primary"
+                        >
+                            Add Item
+                        </Button>
+                    </DialogActions>
+                </form>
+            </Dialog>
         </>
     );
 }

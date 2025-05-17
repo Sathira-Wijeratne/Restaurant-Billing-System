@@ -2,7 +2,7 @@ import './App.css';
 import {BrowserRouter, Routes, Route} from "react-router";
 
 import {FirebaseDatabaseProvider} from '@react-firebase/database'
-import ViewItems from './components/ViewItems';
+import ViewAndManageItems from './components/ViewAndManageItems';
 import AddItem from './components/AddItems';
 
 function App() {
@@ -10,7 +10,7 @@ function App() {
     <FirebaseDatabaseProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" exact Component={ViewItems}/>
+          <Route path="/" exact Component={ViewAndManageItems}/>
           <Route path="/add-item" exact Component={AddItem}/>
         </Routes>
       </BrowserRouter>

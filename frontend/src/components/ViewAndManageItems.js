@@ -251,7 +251,7 @@ export default function ViewAndManageItems() {
                             left: 0,
                             right: 0,
                             bottom: 0,
-                            bgcolor: 'rgba(64, 30, 13, 0.6)', // Warm brown overlay
+                            bgcolor: 'rgba(0, 0, 0, 0.4)',
                             zIndex: 9999,
                             display: 'flex',
                             justifyContent: 'center',
@@ -293,7 +293,7 @@ export default function ViewAndManageItems() {
                                     fontFamily: 'Georgia, serif' // Classic restaurant font
                                 }}
                             >
-                                <MenuBook sx={{ mr: 1, fontSize: 'inherit', color: '#8D2B0B' }} />
+                                <MenuBook sx={{ mr: 1, fontSize: 'inherit', color: 'primary.main' }} />
                                 Menu Items: {items.length}
                             </Typography>
                             <Button
@@ -315,7 +315,7 @@ export default function ViewAndManageItems() {
                         {/* Loading state */}
                         {isItemsLoading ? (
                             <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                                <CircularProgress sx={{ color: '#8D2B0B' }} /> {/* Match primary color */}
+                                <CircularProgress sx={{ color: 'primary' }} /> {/* Match primary color */}
                             </Box>
                         ) : items.length === 0 ? (
                             // No items state
@@ -330,7 +330,7 @@ export default function ViewAndManageItems() {
                                 }}
                             >
                                 <Typography variant="h6" color="#8D6E63"> {/* Warm brown text */}
-                                    No menu items found. Add some dishes to get started!
+                                    No menu items found
                                 </Typography>
                             </Paper>
                         ) : (
@@ -369,7 +369,7 @@ export default function ViewAndManageItems() {
                                                 <TableCell>{item.itemPrice}</TableCell>
                                                 <TableCell align="right">
                                                     <IconButton
-                                                        color="secondary"
+                                                        color="default"
                                                         onClick={() => handleEditClick(item)}
                                                         size="small"
                                                         sx={{ mr: 0.5 }}
@@ -459,8 +459,8 @@ export default function ViewAndManageItems() {
                     onClose={() => setShowAddModal(false)}
                     maxWidth="sm"
                     fullWidth
-                    PaperProps={{
-                        sx: { borderRadius: 2 }
+                    slotProps={{
+                        paper: {sx: { borderRadius: 2 }}
                     }}
                 >
                     <DialogTitle sx={{ 

@@ -38,9 +38,12 @@ const AddItemDialog = ({ open, onClose, onSubmit, newItemName, setNewItemName, n
                         required
                         value={newItemPrice}
                         margin="normal"
-                        slot={{ min: 0, max: 50000 }}
+                        slotProps={{htmlInput:{min: 0, max: 50000, step : 0.01}}}
                         onChange={(e) => {
-                            setNewItemPrice(validateItemPrice(e.target.value));
+                            const value = e.target.value;
+                            if(value === "" || /^\d{0,5}(\.\d{0,2})?$/.test(value)){
+                                setNewItemPrice(validateItemPrice(value));
+                            }
                         }}
                     />
                 </DialogContent>

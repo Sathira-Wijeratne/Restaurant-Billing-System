@@ -38,9 +38,13 @@ const EditItemDialog = ({ open, onClose, onSubmit, editItemName, setEditItemName
                         required
                         value={editItemPrice}
                         margin="normal"
-                        slot={{ min: 0, max: 50000 }}
+                        slotProps={{htmlInput:{min: 0, max: 50000, step : 0.01}}}
                         onChange={(e) => {
-                            setEditItemPrice(validateItemPrice(e.target.value));
+                            const value = e.target.value;
+                            // allow up to 5 digits before the decimal and 2 after
+                            if(value === "" || /^\d{0,5}(\.\d{0,2})?$/.test(value)){ 
+                                setEditItemPrice(validateItemPrice(value));
+                            }
                         }}
                     />
                 </DialogContent>

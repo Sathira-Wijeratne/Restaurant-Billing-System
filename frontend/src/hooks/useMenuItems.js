@@ -39,19 +39,20 @@ const useMenuItems = () => {
     // Add a new item
     const addItem = async (newItemName, newItemPrice) => {
         const trimmedName = newItemName.trim();
+        const price = Number(newItemPrice);
 
         try {
             // save the item
             const docRef = await addDoc(collection(cong, "items"), {
                 itemName: trimmedName,
-                itemPrice: newItemPrice
+                itemPrice: price
             });
 
             // Create new item object
             const newItem = {
                 id: docRef.id,
                 itemName: trimmedName,
-                itemPrice: newItemPrice
+                itemPrice: price
             };
 
             // Add the new item to the top of the list
@@ -70,17 +71,18 @@ const useMenuItems = () => {
         try {
             // Trim the name before saving
             const trimmedName = editItemName.trim();
+            const price = Number(editItemPrice);
 
             const docRef = doc(cong, "items", itemId);
             await updateDoc(docRef, {
                 itemName: trimmedName,
-                itemPrice: editItemPrice
+                itemPrice: price
             });
 
             // Update the local state to reflect changes
             const updatedItems = items.map(item =>
                 item.id === itemId
-                    ? { ...item, itemName: trimmedName, itemPrice: editItemPrice }
+                    ? { ...item, itemName: trimmedName, itemPrice: price}
                     : item
             );
             setItems(updatedItems);

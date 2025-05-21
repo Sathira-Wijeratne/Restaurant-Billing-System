@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import { Add, MenuBook } from "@mui/icons-material";
-import { Paper, Button, Typography, Box, Container, ThemeProvider, CircularProgress } from "@mui/material";
+import { Paper, Button, Typography, Box, Container, ThemeProvider } from "@mui/material";
 import restaurantTheme from "../theme/restaurantTheme";
 import AddItemDialog from "./dialogs/AddItemDialog";
 import EditItemDialog from "./dialogs/EditItemDialog";

@@ -1,14 +1,15 @@
 import { Box, Typography } from "@mui/material";
+import restaurantTheme from "../theme/restaurantTheme";
 
 const RestaurantHeader = () => {
     return (
         <Box sx={{
             width: '100%',
-            bgcolor: '#8D2B0B',
+            bgcolor: restaurantTheme.palette.primary.main,
             color: 'white',
             py: 1, // Reduced vertical padding
             px: 0,
-            boxShadow: '0 4px 16px 0 rgba(141,43,11,0.10)',
+            boxShadow: (theme) => `0 4px 16px 0 ${theme.palette.primary.main}1A`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',

@@ -11,10 +11,9 @@ const AddItemDialog = ({ open, onClose, onSubmit, newItemName, setNewItemName, n
             slotProps={{
                 paper: {sx: { borderRadius: 2 }}
             }}
-        >
-            <DialogTitle sx={{ 
-                backgroundColor: '#F5EBD5', // Warm beige header
-                color: '#5F4B32', // Warm brown text
+        >            <DialogTitle sx={{ 
+                backgroundColor: (theme) => theme.components.MuiTableCell.styleOverrides.head.backgroundColor,
+                color: (theme) => theme.components.MuiTableCell.styleOverrides.head.color,
                 fontFamily: 'Georgia, serif' // Classic restaurant font
             }}>
                 Add New Menu Item

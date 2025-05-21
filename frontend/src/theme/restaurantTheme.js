@@ -1,8 +1,7 @@
 import { createTheme } from "@mui/material";
 
 // Create a custom theme with restaurant colors
-const restaurantTheme = createTheme({
-    palette: {
+const restaurantTheme = createTheme({    palette: {
         primary: {
             main: '#8D2B0B', // Warm brick red - classic restaurant color
             light: '#B23C17',
@@ -18,10 +17,18 @@ const restaurantTheme = createTheme({
         background: {
             default: '#FFF8E1', // Warm cream background
             paper: '#FFFFFF',
+            alternateRow: '#FAFAF7', // Alternating row color
+            emptyState: '#F9F3E6', // Background for empty state messages
         },
         text: {
             primary: '#2C2C2C',
-            secondary: '#5F5F5F'
+            secondary: '#5F5F5F',
+            accent: '#5F4B32', // Warm brown text for headings
+            message: '#8D6E63', // Message text color
+        },
+        border: {
+            light: '#E8E0D0', // Light border color
+            dashed: '#D2B48C', // Border for empty states
         },
     },
     components: {

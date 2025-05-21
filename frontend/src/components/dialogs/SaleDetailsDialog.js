@@ -10,10 +10,9 @@ const SaleDetailsDialog = ({ open, onClose, sale, saleItems, isLoading }) => {
             slotProps={{
                 paper: {sx: { borderRadius: 2 }}
             }}
-        >
-            <DialogTitle sx={{ 
-                backgroundColor: '#F5EBD5',
-                color: '#5F4B32',
+        >            <DialogTitle sx={{ 
+                backgroundColor: (theme) => theme.components.MuiTableCell.styleOverrides.head.backgroundColor,
+                color: (theme) => theme.components.MuiTableCell.styleOverrides.head.color,
                 fontFamily: 'Georgia, serif',
                 display: 'flex',
                 justifyContent: 'space-between',
@@ -60,7 +59,7 @@ const SaleDetailsDialog = ({ open, onClose, sale, saleItems, isLoading }) => {
                                             key={item.id}
                                             sx={{
                                                 '&:nth-of-type(odd)': {
-                                                    backgroundColor: '#FAFAF7',
+                                                    backgroundColor: (theme) => theme.palette.background.alternateRow,
                                                 },
                                             }}
                                         >
@@ -71,7 +70,7 @@ const SaleDetailsDialog = ({ open, onClose, sale, saleItems, isLoading }) => {
                                         </TableRow>
                                     );
                                 })}
-                                <TableRow sx={{ backgroundColor: '#F5EBD5' }}>
+                                <TableRow sx={{ backgroundColor: (theme) => theme.components.MuiTableCell.styleOverrides.head.backgroundColor }}>
                                     <TableCell colSpan={2} />
                                     <TableCell align="right" sx={{ fontWeight: 700 }}>Total:</TableCell>
                                     <TableCell align="right" sx={{ fontWeight: 700 }}>
@@ -84,14 +83,12 @@ const SaleDetailsDialog = ({ open, onClose, sale, saleItems, isLoading }) => {
                 ) : (
                     <Paper 
                         elevation={1} 
-                        sx={{ 
-                            p: 3, 
+                        sx={{                            p: 3, 
                             textAlign: 'center', 
-                            backgroundColor: '#F9F3E6',
-                            border: '1px dashed #D2B48C' 
+                            backgroundColor: (theme) => theme.palette.background.default,
+                            border: (theme) => `1px dashed ${theme.palette.border.dashed}`
                         }}
-                    >
-                        <Typography variant="body1" color="#8D6E63">
+                    >                        <Typography variant="body1" sx={{ color: (theme) => theme.palette.text.message }}>
                             No items found for this sale
                         </Typography>
                     </Paper>

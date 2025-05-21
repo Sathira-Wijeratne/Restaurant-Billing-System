@@ -5,7 +5,7 @@ const SalesTable = ({ sales, isSalesLoading, onViewClick }) => {
     if (isSalesLoading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                <CircularProgress sx={{ color: 'primary' }} />
+                <CircularProgress color="primary" />
             </Box>
         );
     }
@@ -17,12 +17,10 @@ const SalesTable = ({ sales, isSalesLoading, onViewClick }) => {
                 sx={{ 
                     p: 3, 
                     textAlign: 'center', 
-                    mt: 3,
-                    backgroundColor: '#F9F3E6',
-                    border: '1px dashed #D2B48C'
+                    mt: 3,                    backgroundColor: (theme) => theme.palette.background.default,
+                    border: (theme) => `1px dashed ${theme.palette.border.dashed}`
                 }}
-            >
-                <Typography variant="h6" color="#8D6E63">
+            >                <Typography variant="h6" sx={{ color: (theme) => theme.palette.text.message }}>
                     No sales found
                 </Typography>
             </Paper>
@@ -38,7 +36,7 @@ const SalesTable = ({ sales, isSalesLoading, onViewClick }) => {
                 overflow: 'auto',
                 mt: 3,
                 borderRadius: 2,
-                border: '1px solid #E8E0D0'
+                border: (theme) => `1px solid ${theme.palette.border.light}`
             }}
         >
             <Table stickyHeader>
@@ -57,7 +55,7 @@ const SalesTable = ({ sales, isSalesLoading, onViewClick }) => {
                             hover
                             sx={{
                                 '&:nth-of-type(odd)': {
-                                    backgroundColor: '#FAFAF7',
+                                    backgroundColor: (theme) => theme.palette.background.alternateRow,
                                 },
                             }}
                         >

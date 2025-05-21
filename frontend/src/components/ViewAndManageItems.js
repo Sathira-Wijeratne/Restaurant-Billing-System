@@ -104,11 +104,10 @@ export default function ViewAndManageItems() {
     };
 
     return (
-        <ThemeProvider theme={restaurantTheme}>
-            <Box sx={{
+        <ThemeProvider theme={restaurantTheme}>            <Box sx={{
                 minHeight: '100vh',
-                backgroundColor: '#FFF8E1', // Warm cream background
-                backgroundImage: 'linear-gradient(rgba(255, 248, 225, 0.8), rgba(255, 248, 225, 0.8)), url("https://www.transparenttextures.com/patterns/food.png")',
+                backgroundColor: (theme) => theme.palette.background.default, // Using theme background
+                backgroundImage: (theme) => `linear-gradient(rgba(255, 248, 225, 0.8), rgba(255, 248, 225, 0.8)), url("https://www.transparenttextures.com/patterns/food.png")`,
                 pt: 2
             }}>
                 {/* Overlay for blocking action */}
@@ -141,12 +140,11 @@ export default function ViewAndManageItems() {
                 />
 
                 {/* Main content */}
-                <Container maxWidth="md">
-                    <Paper elevation={3} sx={{
+                <Container maxWidth="md">                    <Paper elevation={3} sx={{
                         p: 3,
                         mb: 4,
-                        borderTop: '6px solid #8D2B0B', // Warm brick red accent line
-                        backgroundColor: 'white'
+                        borderTop: (theme) => `6px solid ${theme.palette.primary.main}`,
+                        backgroundColor: (theme) => theme.palette.background.paper
                     }}>
                         <Box sx={{
                             display: 'flex',
@@ -157,8 +155,7 @@ export default function ViewAndManageItems() {
                                 variant="h4"
                                 sx={{
                                     display: 'flex',
-                                    alignItems: 'center',
-                                    color: '#5F4B32', // Warm brown text
+                                    alignItems: 'center',                                    color: (theme) => theme.palette.text.accent,
                                     fontFamily: 'Georgia, serif' // Classic restaurant font
                                 }}
                             >
@@ -168,8 +165,7 @@ export default function ViewAndManageItems() {
                             <Box sx={{
                                 display: 'flex',
                                 gap: 1
-                            }}>
-                                <Button
+                            }}>                                <Button
                                     variant="contained"
                                     color="primary"
                                     onClick={handleAddClick}
@@ -178,12 +174,11 @@ export default function ViewAndManageItems() {
                                         borderRadius: 2,
                                         px: 2,
                                         py: 1,
-                                        boxShadow: '0 4px 8px rgba(141, 43, 11, 0.2)' // Subtle shadow
+                                        boxShadow: (theme) => `0 4px 8px ${theme.palette.primary.main}33` // Subtle shadow
                                     }}
                                 >
                                     Add New Item
-                                </Button>
-                                <Button
+                                </Button>                                <Button
                                     variant="contained"
                                     color="primary"
                                     onClick={() => navigate('/sales')}
@@ -192,7 +187,7 @@ export default function ViewAndManageItems() {
                                         borderRadius: 2,
                                         px: 2,
                                         py: 1,
-                                        boxShadow: '0 4px 8px rgba(141, 43, 11, 0.2)' // Subtle shadow
+                                        boxShadow: (theme) => `0 4px 8px ${theme.palette.primary.main}33` // Subtle shadow
                                     }}
                                 >
                                     View Sales

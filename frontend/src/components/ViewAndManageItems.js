@@ -8,14 +8,6 @@ import EditItemDialog from "./dialogs/EditItemDialog";
 import MenuItemsTable from "./MenuItemsTable";
 import useMenuItems from "../hooks/useMenuItems";
 
-/**
- * TODO :
- *  Day 1:
- *      What happens if alot of items are added? Handle this
- *  Day 3:
- *      Multiple deletes (via selection)
- */
-
 export default function ViewAndManageItems() {
     // State variables
     const [showEditModal, setShowEditModal] = useState(false);

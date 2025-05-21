@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
-import { Add, MenuBook } from "@mui/icons-material";
+import { Add, MenuBook, Assessment } from "@mui/icons-material";
 import { Paper, Button, Typography, Box, Container, ThemeProvider } from "@mui/material";
 import restaurantTheme from "../theme/restaurantTheme";
 import AddItemDialog from "./dialogs/AddItemDialog";
 import EditItemDialog from "./dialogs/EditItemDialog";
 import MenuItemsTable from "./MenuItemsTable";
 import useMenuItems from "../hooks/useMenuItems";
+import { useNavigate } from 'react-router-dom';
 
 export default function ViewAndManageItems() {
     // State variables
@@ -28,6 +29,8 @@ export default function ViewAndManageItems() {
         setNewItemPrice("");
         setShowAddModal(true);
     };
+
+    const navigate = useNavigate();
 
     // Handle form submission for adding a new item
     const handleAddSubmit = async (e) => {
@@ -66,7 +69,7 @@ export default function ViewAndManageItems() {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                     <Button
                         variant="contained"
-                        color="error"
+                        color="primary"
                         size="small"
                         onClick={async () => {
                             toast.dismiss();
@@ -162,20 +165,39 @@ export default function ViewAndManageItems() {
                                 <MenuBook sx={{ mr: 1, fontSize: 'inherit', color: 'primary.main' }} />
                                 Menu Items: {items.length}
                             </Typography>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleAddClick}
-                                startIcon={<Add />}
-                                sx={{
-                                    borderRadius: 2,
-                                    px: 2,
-                                    py: 1,
-                                    boxShadow: '0 4px 8px rgba(141, 43, 11, 0.2)' // Subtle shadow
-                                }}
-                            >
-                                Add New Item
-                            </Button>
+                            <Box sx={{
+                                display: 'flex',
+                                gap: 1
+                            }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={handleAddClick}
+                                    startIcon={<Add />}
+                                    sx={{
+                                        borderRadius: 2,
+                                        px: 2,
+                                        py: 1,
+                                        boxShadow: '0 4px 8px rgba(141, 43, 11, 0.2)' // Subtle shadow
+                                    }}
+                                >
+                                    Add New Item
+                                </Button>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    onClick={() => navigate('/sales')}
+                                    startIcon={<Assessment />}
+                                    sx={{
+                                        borderRadius: 2,
+                                        px: 2,
+                                        py: 1,
+                                        boxShadow: '0 4px 8px rgba(141, 43, 11, 0.2)' // Subtle shadow
+                                    }}
+                                >
+                                    View Sales
+                                </Button>
+                            </Box>
                         </Box>
                         <MenuItemsTable
                             items={items}

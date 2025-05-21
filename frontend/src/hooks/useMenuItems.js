@@ -2,21 +2,27 @@ import { useState, useEffect } from "react";
 import { collection, doc, deleteDoc, updateDoc, addDoc, onSnapshot } from "firebase/firestore";
 import { toast } from "react-toastify";
 import cong from "../Firebase";
+import restaurantTheme from "../theme/restaurantTheme";
 
 const useMenuItems = () => {
     const [items, setItems] = useState([]);
     const [isItemsLoading, setIsItemsLoading] = useState(true);
 
     // Toast notifications
-    const notifyAddItem = () => toast.success("Item added");
+    const notifyAddItem = () => toast.success("Item added", {
+        style: { "--toastify-icon-color-success": restaurantTheme.palette.primary.main }
+    }); 
     const notifyAddItemFail = () => toast.error("Item not added");
     const notifyEditItemFail = () => toast.error("Item not edited");
+    const notifyDeleteItemSuccess = () => toast.success("Item deleted", {
+        style: { "--toastify-icon-color-success": restaurantTheme.palette.primary.main }
+    })
     const notifyDeleteItemFail = () => toast.error("Item not deleted");
 
     // Set up real-time listener for Firestore items
     useEffect(() => {
         setIsItemsLoading(true);
-        
+
         // Create a listener that updates whenever the database changes
         const unsubscribe = onSnapshot(
             collection(cong, "items"),
@@ -25,7 +31,7 @@ const useMenuItems = () => {
                     id: doc.id,
                     ...doc.data()
                 }));
-                
+
                 setItems(itemsArray);
                 setIsItemsLoading(false);
             },
@@ -73,7 +79,7 @@ const useMenuItems = () => {
                 itemName: trimmedName,
                 itemPrice: price
             });
-            
+
             // No need to manually update state, onSnapshot will handle it
             return true;
         } catch (error) {
@@ -86,9 +92,10 @@ const useMenuItems = () => {
     // Delete an item
     const deleteItem = async (itemId) => {
         try {
+            // onSnapshot automatically manage state
             await deleteDoc(doc(cong, "items", itemId));
-            // No need to manually update state, onSnapshot will handle it
-            toast.success('Item deleted');
+            
+            notifyDeleteItemSuccess();
             return true;
         } catch (error) {
             console.error("Item not deleted: ", error);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, doc, deleteDoc, updateDoc, addDoc } from "firebase/firestore";
+import { collection, doc, deleteDoc, updateDoc, addDoc, onSnapshot } from "firebase/firestore";
 import { toast } from "react-toastify";
 import cong from "../Firebase";
 
@@ -13,27 +13,31 @@ const useMenuItems = () => {
     const notifyEditItemFail = () => toast.error("Item not edited");
     const notifyDeleteItemFail = () => toast.error("Item not deleted");
 
-    // Fetch items from Firestore on component mount
+    // Set up real-time listener for Firestore items
     useEffect(() => {
-        async function fetchData() {
-            try {
-                const querySnapshot = await getDocs(collection(cong, "items"));
-
-                const itemsArray = querySnapshot.docs.map(doc => ({
+        setIsItemsLoading(true);
+        
+        // Create a listener that updates whenever the database changes
+        const unsubscribe = onSnapshot(
+            collection(cong, "items"),
+            (snapshot) => {
+                const itemsArray = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
-
+                
                 setItems(itemsArray);
-            } catch (error) {
+                setIsItemsLoading(false);
+            },
+            (error) => {
                 console.error("Error fetching items : ", error);
                 toast.error("Failed to load items");
-            } finally {
                 setIsItemsLoading(false);
             }
-        }
+        );
 
-        fetchData();
+        // Clean up the listener when component unmounts
+        return () => unsubscribe();
     }, []);
 
     // Add a new item
@@ -42,21 +46,12 @@ const useMenuItems = () => {
         const price = Number(newItemPrice);
 
         try {
-            // save the item
-            const docRef = await addDoc(collection(cong, "items"), {
+            // save the item - no need to update state manually, onSnapshot will handle it
+            await addDoc(collection(cong, "items"), {
                 itemName: trimmedName,
                 itemPrice: price
             });
 
-            // Create new item object
-            const newItem = {
-                id: docRef.id,
-                itemName: trimmedName,
-                itemPrice: price
-            };
-
-            // Add the new item to the top of the list
-            setItems([newItem, ...items]);
             notifyAddItem();
             return true;
         } catch (error) {
@@ -78,14 +73,8 @@ const useMenuItems = () => {
                 itemName: trimmedName,
                 itemPrice: price
             });
-
-            // Update the local state to reflect changes
-            const updatedItems = items.map(item =>
-                item.id === itemId
-                    ? { ...item, itemName: trimmedName, itemPrice: price}
-                    : item
-            );
-            setItems(updatedItems);
+            
+            // No need to manually update state, onSnapshot will handle it
             return true;
         } catch (error) {
             console.error("Error updating item : ", error);
@@ -98,7 +87,7 @@ const useMenuItems = () => {
     const deleteItem = async (itemId) => {
         try {
             await deleteDoc(doc(cong, "items", itemId));
-            setItems(items.filter(i => i.id !== itemId));
+            // No need to manually update state, onSnapshot will handle it
             toast.success('Item deleted');
             return true;
         } catch (error) {

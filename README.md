@@ -50,7 +50,7 @@ A modern, responsive web application for restaurant billing management. This sys
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/Restaurant-Billing-System.git
+   git clone https://github.com/Sathira-Wijeratne/Restaurant-Billing-System.git
    cd Restaurant-Billing-System
    ```
 
